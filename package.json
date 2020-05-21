@@ -1,0 +1,66 @@
+{
+  "name": "TOOLBOX",
+  "productName": "运营小工具",
+  "version": "1.0.0",
+  "description": "运营小工具",
+  "private": true,
+  "main": "index.js",
+  "author": {
+    "name": "lxd",
+    "email": "sovvjsai@163.com"
+  },
+  "scripts": {
+    "start": "electron .",
+    "lib": "git submodule init && git submodule update -f && git submodule foreach git pull origin master",
+    "test": "jest --watch --coverage",
+    "install-lib": "cd lib && npm install --production",
+    "install-all": "npm install && cd lib && npm install --production",
+    "install-pro": "npm install --production && cd lib && npm install --production",
+    "dev": "concurrently \"wait-on http://localhost:3002 && electron .\" \"cross-env BROWSER=none npm start\"",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "distWin": "electron-builder --win --x64",
+    "package": "electron-builder build"
+  },
+  "homepage": "./",
+  "build": {
+    "copyright": "Copyright © 2019 ${author}",
+    "productName": "运营小工具",
+    "appId": "org.develar.TOOLBOX",
+    "directories": {
+      "buildResources": "resources",
+      "output": "release"
+    },
+    "publish": {
+      "provider": "generic",
+      "owner": "generic",
+      "repo": "generic",
+      "private": "generic",
+      "url": "http://106.14.5.204:8070/ftp/down/"
+    }
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "devDependencies": {
+    "electron": "^7.1.7",
+    "electron-builder": "^21.2.0"
+  },
+  "dependencies": {
+    "electron-debug": "^3.0.1",
+    "electron-devtools-installer": "^2.2.4",
+    "electron-is-dev": "^1.1.0",
+    "electron-log": "^3.0.9",
+    "electron-store": "^5.1.0",
+    "electron-updater": "^4.2.0",
+    "file-loader": "^0.9.0",
+    "http-proxy-middleware": "^0.20.0",
+    "ip": "^1.1.5",
+    "nedb": "^1.8.0",
+    "request-ip": "^2.1.3",
+    "socket.io": "^2.3.0"
+  },
+  "electronDownload": {
+    "mirror": "https://npm.taobao.org/mirrors/electron/"
+  }
+}

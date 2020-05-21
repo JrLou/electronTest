@@ -1,0 +1,6 @@
+owner: generic
+repo: generic
+provider: generic
+private: generic
+url: 'http://106.14.5.204:8070/ftp/down/'
+updaterCacheDirName: androidinterfaceremote-updater

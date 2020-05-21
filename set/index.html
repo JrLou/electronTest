@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!-- saved from url=(0064)http://www.17sucai.com/preview/341752/2015-07-21/html/index.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>修改服务器</title>
+<!-- Custom Theme files -->
+<link href="res/style.css" rel="stylesheet" type="text/css" media="all">
+<!-- Custom Theme files -->
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<style>
+		.button{
+			color: #0a53b0;
+			font-size: 17px;
+			font-weight: 600;
+			border-radius: 5px;
+			-webkit-border-radius: 5px;
+			-moz-border-radius: 5px;
+			-o-border-radius: 5px;
+			margin: 0px 0px 0px 0px;
+			display: inline-block;
+			cursor: pointer;
+			outline: none;
+			border: none;
+			float: right;
+		}
+		.button:hover{
+			opacity: 0.5;
+		}
+		#message{
+			color: red;
+		}
+	</style>
+
+</head>
+<body>
+
+<div class="login">
+	<div class="login-top">
+		<h2>修改服务器</h2>
+		<h3></h3>
+    </div>
+	<div class="login-bottom">
+
+	   <div class="user">
+			<input  id="input" type="text" placeholder="请填写域名" >
+			<i></i>
+		</div>
+		<div id="message"></div>
+	  <div class="keepme">
+	  	<div class="keep-loginbutton">
+	  		<input type="submit" onclick="ok()" value="设置">
+	  	</div>
+
+	  	<div class="clear"> </div>
+	  </div>
+		<div class="button" onclick="reset()">
+			恢复到默认域名
+		</div>
+	  <div class="forgot">
+	  		<p>注：您设置的域名，将会设置为程序下次打开主页</p>
+	  	<div class="clear"> </div>
+	  </div>
+	</div>
+</div>
+<script>
+    //下面是第一种方法 通过 ipcRenderer
+	var send = function (args) {
+        try{
+            const ipcRenderer = require('electron').ipcRenderer;
+            ipcRenderer.send('setUrl', args);
+        }catch (e) {
+            //no do
+        }
+    }
+
+    function ok(){
+        let url =  document.getElementById("input").value
+        console.log(url)
+        if(!checkUrl(url)){
+            document.getElementById("message").innerText = "请输入合格的URL";
+            return;
+        }
+        //通知URL改变，并做记录
+        send(url)
+    }
+    function reset() {
+
+        try {
+            const ipcRenderer = require('electron').ipcRenderer;
+            ipcRenderer.send('setUrlReset',"");
+        } catch (e) {
+			console.error(e);
+        }
+    }
+    function checkUrl(url){
+        let reg=/^([hH][tT]{2}[pP]:\/\/|[hH][tT]{2}[pP][sS]:\/\/)[\s\S]+$/;
+        if(!reg.test(url)){
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+</script>
+</body></html>

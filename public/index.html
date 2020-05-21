@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <link rel="shortcut icon" href="favicon.ico"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no"/>
+    <meta name="theme-color" content="#000000"/>
+    <style>
+        .body {
+            font-family: Arial, Helvetica, Helvetica Neue, serif;
+            padding: 30px;
+            margin: 0;
+            font-size: 14px;
+            box-sizing: border-box;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 1)
+        }
+
+        #reloadBtn {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            font-size: 24px;
+        }
+
+        .tagBox {
+            font-size: 18px;
+            color: blue;
+            margin-bottom: 50px;
+        }
+
+        .title {
+            font-size: 18px;
+            color: red;
+            margin-top: 30px;
+        }
+
+        .subtitle {
+            color: #007aff;
+        }
+    </style>
+</head>
+<body class="body">
+<noscript>工具平台</noscript>
+<div id="root" class="rootStyle">
+    <button id="reloadBtn" onclick="reloadPage()">刷新页面</button>
+    <div>
+        <div class="tagBox">解析文件使用方式：选择一个excel文件或者txt文件，保证同级目录下没有与选择文件同名的文件夹即可。新生成的文件会存放至自动生成的同名文件夹。
+        </div>
+        <div class="title">解析excel</div>
+        <div class="subtitle">(如果存在匹配的列名称，将该列每一行内容生成一个txt文件，第一行除外)</div>
+        <div>
+            <div>
+                <span>需要匹配的列名称：</span>
+                <input
+                        id="matchTxt"
+                        type="text"
+                />
+            </div>
+            <input
+                    id="excelInput"
+                    type="file"
+                    accept='.xlsx, .xls'
+                    onchange="dealExcel()"
+            />
+        </div>
+        <div class="title">解析txt</div>
+        <div class="subtitle">(将每一行内容生成一个txt文件)</div>
+        <div>
+            <input
+                    id="txtInput"
+                    type="file"
+                    accept='.txt'
+                    onchange="dealTxt()"
+            />
+        </div>
+    </div>
+    <div class="title">生成随机账号</div>
+    <div class="subtitle">(如果填入标记，每个账号都会带上指定标记，比如给账号加上后缀"@hotmail.com")</div>
+    <div id="toolBox">
+        <div>
+            <span>标记：</span>
+            <input type="text" id="tag" placeholder="无">
+            <span>标记位置：</span>
+            <select
+                    id="tagPlace"
+            >
+                <option value="1">尾部</option>
+                <option value="2">头部</option>
+            </select>
+        </div>
+        <div>
+            <span>需要生成的账号数量：</span>
+            <input type="number" id="needNum" placeholder="需要整数">
+        </div>
+        <div>
+            <span>不含标记部分的长度：</span>
+            <input type="number" id="accountLength" placeholder="需要整数" value="8">
+        </div>
+        <button onClick="getAccount()">随机生成账号</button>
+    </div>
+    <div id="accountBox"></div>
+</div>
+<script type="text/javascript" src="./static/tool/xlsx.full.min.js"></script>
+<script>
+    const fs = window.require('fs');
+
+    function reloadPage() {
+        window.location.reload();
+    }
+
+    //处理文件
+    function dealTxt() {
+        let file = document.getElementById("txtInput").files[0];
+        //清空
+        document.getElementById("txtInput").outerHTML = document.getElementById("txtInput").outerHTML;
+        if (!file) {
+            return;
+        }
+        const fileReader = new FileReader();
+
+        fileReader.onload = (event) => {
+            // console.log(fileReader.result);
+            let data = fileReader.result && fileReader.result.split(/\n/g);
+            // console.log(data);
+            this.createFiles(file, data);
+        };
+
+        fileReader.readAsText(file, "utf8");
+    }
+
+    //处理excel
+    function dealExcel() {
+        let title = document.getElementById("matchTxt").value;
+        // 获取上传的文件对象
+        let file = document.getElementById("excelInput").files[0];
+        //清空
+        document.getElementById("excelInput").outerHTML = document.getElementById("excelInput").outerHTML;
+        if (!file) {
+            alert("文件未选择");
+            return;
+        }
+        if (!title) {
+            alert("列表名称未输入");
+            return;
+        }
+        //通过FileReader对象读取文件
+        const fileReader = new FileReader();
+        fileReader.onload = event => {
+            try {
+                const {result} = event.target;
+                // 以二进制流方式读取得到整份excel表格对象
+                const workbook = XLSX.read(result, {type: 'binary'});
+                // 存储获取到的数据
+                let data = [];
+                // 遍历每张工作表进行读取（这里默认只读取第一张表）
+                for (const sheet in workbook.Sheets) {
+                    if (workbook.Sheets.hasOwnProperty(sheet)) {
+                        // 利用 sheet_to_json 方法将 excel 转成 json 数据
+                        let sheetPage = XLSX.utils.sheet_to_json(workbook.Sheets[sheet]);
+                        // console.log("每一页数据：");
+                        // console.log(sheetPage);
+                        for (let i = 0, l = sheetPage.length; i < l; i++) {
+                            let cell = sheetPage[i];
+                            if (cell[title]) {
+                                data.push(cell[title]);
+                            }
+                        }
+                    }
+                }
+                // 最终获取到并且格式化后的 json 数据
+                // console.log(data);
+                this.createFiles(file, data);
+
+            } catch (e) {
+                // 这里可以抛出文件类型错误不正确的相关提示
+                console.log("e", e);
+                alert('文件类型不正确！');
+            }
+        };
+        // 以二进制方式打开文件
+        fileReader.readAsBinaryString(file);
+    }
+
+    //生成文件
+    function createFiles(file, data) {
+        // console.log(file);
+        let filePath = file.path;
+
+        let sourcePath = filePath.slice(0, filePath.lastIndexOf("/") + 1);
+        let dirName = file.name.slice(0, file.name.lastIndexOf("."));
+        let dirPath = sourcePath + dirName;
+
+        if (fs.existsSync(dirPath)) {
+            // console.log("文件夹已经存在");
+            alert("请先删除已经生成的文件夹");
+            return;
+        } else {
+            // console.log("文件夹不存在");
+            fs.mkdirSync(dirPath);
+        }
+
+        let num = 0;
+        for (let i = 0, l = data.length; i < l; i++) {
+            let str = String(data[i]);
+            if (str && str.replace(/\s/g, "")) {
+                num++;
+                let fileName = dirPath + "/" + dirName + "TXT" + num + ".txt";
+                fs.writeFileSync(fileName, data[i], {})
+            }
+        }
+        alert("已经生成文件，请查看");
+    }
+</script>
+<script>
+    function getAccount() {
+        let num = Math.floor(document.getElementById("needNum").value);
+        if (!num) {
+            alert("请填写所需数量");
+            return;
+        }
+        if (num > 10000) {
+            alert("数量大于一万，我觉得你电脑扛不住，分多次生成吧=。=");
+            return;
+        }
+
+        let returnDom = "";
+        let preTxt = document.getElementById("tag").value || "";
+        if (preTxt && preTxt.length > 50) {
+            alert("一个标记的字数能超过50，你是认真的吗？！");
+            return;
+        }
+        let tagPlace = document.getElementById("tagPlace").value || "";
+        let accountLength = document.getElementById("accountLength").value || 8;
+        if (accountLength > 50) {
+            alert("账号长度超过50，你是认真的吗？！");
+            return;
+        }
+        for (let i = 0; i < num; i++) {
+            let account = getRandomStr(accountLength);
+            if (preTxt) {
+                account = (tagPlace == 2 ? preTxt + account : account + preTxt);
+            }
+            returnDom += "<div>" + account + "</div>";
+        }
+
+        document.getElementById("accountBox").innerHTML = returnDom;
+    }
+
+    function getRandomStr(length) {
+        let pool = "0123456789abcdefghijklmnopqrstuvwxyz";  //36个
+        let poolLength = pool.length;
+        let str = "";
+        for (let i = 0; i < length; i++) {
+            str += pool[Math.floor(Math.random() * poolLength)];
+        }
+
+        return str;
+    }
+</script>
+</body>
+</html>
