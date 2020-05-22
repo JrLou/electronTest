@@ -71,7 +71,8 @@
             />
         </div>
         <div class="title">解析txt</div>
-        <div class="subtitle">(将每一行内容生成一个txt文件)</div>
+        <div class="subtitle">(将每一行内容生成一个txt文件，请确保txt文件的编码是UTF-8格式，否则会生成乱码文件。)</div>
+        <div class="subtitle">(如何修改txt文件的编码：编辑器打开文件，另存为的时候可以选择编码。)</div>
         <div>
             <input
                     id="txtInput"
@@ -192,11 +193,15 @@
     function createFiles(file, data) {
         // console.log(file);
         let filePath = file.path;
-
-        let sourcePath = filePath.slice(0, filePath.lastIndexOf("/") + 1);
+        let sourcePath = "";
+        let ifMac = filePath.indexOf("/") !== -1;
+        if(ifMac){
+            sourcePath = filePath.slice(0, filePath.lastIndexOf("/") + 1);
+        }else{
+            sourcePath = filePath.slice(0, filePath.lastIndexOf("\\") + 1);
+        }
         let dirName = file.name.slice(0, file.name.lastIndexOf("."));
         let dirPath = sourcePath + dirName;
-
         if (fs.existsSync(dirPath)) {
             // console.log("文件夹已经存在");
             alert("请先删除已经生成的文件夹");
@@ -211,7 +216,8 @@
             let str = String(data[i]);
             if (str && str.replace(/\s/g, "")) {
                 num++;
-                let fileName = dirPath + "/" + dirName + "TXT" + num + ".txt";
+                let conncetTag = ifMac?"/":"\\";
+                let fileName = dirPath + conncetTag + dirName + "TXT" + num + ".txt";
                 fs.writeFileSync(fileName, data[i], {})
             }
         }
